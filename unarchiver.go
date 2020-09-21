@@ -63,6 +63,11 @@ func extractObjects(objectRefs []plist.UID, objects []interface{}) ([]interface{
 			continue
 		}
 
+		if ok := isStringObject(objectInterface, objects); ok {
+			returnValue[i] = objectInterface["NS.string"].(string)
+			continue
+		}
+
 		if object, ok := isArrayObject(objectInterface, objects); ok {
 			extractObjects, err := extractObjects(toUIDList(object["NS.objects"].([]interface{})), objects)
 			if err != nil {
@@ -118,6 +123,26 @@ func isTimeObject(object map[string]interface{}, objects []interface{}) bool {
 		return false
 	}
 	if className == "NSDate" {
+		return true
+	}
+	return false
+}
+
+// Support for NS.String
+// 26 => {
+// 	"$classes" => [
+// 	  0 => "NSMutableString"
+// 	  1 => "NSString"
+// 	  2 => "NSObject"
+// 	]
+// 	"$classname" => "NSMutableString"
+// }
+func isStringObject(object map[string]interface{}, objects []interface{}) bool {
+	className, err := resolveClass(object["$class"], objects)
+	if err != nil {
+		return false
+	}
+	if className == "NSMutableString" {
 		return true
 	}
 	return false
