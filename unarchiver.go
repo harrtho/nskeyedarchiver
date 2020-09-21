@@ -3,7 +3,6 @@ package nskeyedarchiver
 import (
 	"fmt"
 
-	"github.com/rs/zerolog/log"
 	plist "howett.net/plist"
 )
 
@@ -43,7 +42,6 @@ func extractObjectsFromTop(top map[string]interface{}, objects []interface{}) ([
 func extractObjects(objectRefs []plist.UID, objects []interface{}) ([]interface{}, error) {
 	objectCount := len(objectRefs)
 	returnValue := make([]interface{}, objectCount)
-	log.Debug().Msgf("Extracting %d objects from list of %d total objects\n", objectCount, len(objects))
 	for i := 0; i < objectCount; i++ {
 		objectIndex := objectRefs[i]
 		objectRef := objects[objectIndex]
@@ -191,9 +189,10 @@ func extractCustomObject(object map[string]interface{}, objects []interface{}) (
 	var objectKeyList []string
 	for key, value := range object {
 		if key == "$class" || key == "$classes" {
-			log.Debug().Msgf("Ignoring class definition %v\n", key)
+			// Skip class definitions in final result
+			continue
 		} else if _, ok := isPrimitiveObject(value); ok {
-			log.Debug().Msgf("Adding primitive directly %v:%v\n", key, value)
+			// Adding primitive directly
 			objectPrimitives[key] = value
 		} else {
 			objectValueList = append(objectValueList, value)
