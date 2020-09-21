@@ -53,7 +53,7 @@ func extractObjects(objectRefs []plist.UID, objects []interface{}) ([]interface{
 
 		objectInterface := objectRef.(map[string]interface{})
 		if ok := isTimeObject(objectInterface, objects); ok {
-			timestamp, err := nsDateToTime(objectInterface["NS.time"].(float64))
+			timestamp, err := NSDateToTime(objectInterface["NS.time"].(float64))
 			if err != nil {
 				return nil, err
 			}

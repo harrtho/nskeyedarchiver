@@ -53,9 +53,9 @@ func printAsJSON(obj interface{}) {
 	fmt.Print(string(b))
 }
 
-// nsDateToTime takes an Apple Cocoa Core Data timestamp and returns a golang time
+// NSDateToTime takes an Apple Cocoa Core Data timestamp and returns a golang time
 // https://www.epochconverter.com/coredata
-func nsDateToTime(timestamp float64) (time.Time, error) {
+func NSDateToTime(timestamp float64) (time.Time, error) {
 	floatParts := strings.Split(fmt.Sprintf("%.3f", timestamp), ".")
 
 	// Timestamp
