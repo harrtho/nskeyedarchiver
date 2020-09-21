@@ -79,11 +79,10 @@ func nsDateToTime(timestamp float64) (time.Time, error) {
 func verifyCorrectArchiver(nsKeyedArchiverData map[string]interface{}) error {
 	if val, ok := nsKeyedArchiverData["$archiver"]; !ok {
 		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$archiver")
-	} else {
-		if stringValue := val.(string); stringValue != "NSKeyedArchiver" {
-			return fmt.Errorf("Invalid value: %s for key '%s', expected: '%s'", stringValue, "$archiver", "NSKeyedArchiver")
-		}
+	} else if stringValue := val.(string); stringValue != "NSKeyedArchiver" {
+		return fmt.Errorf("Invalid value: %s for key '%s', expected: '%s'", stringValue, "$archiver", "NSKeyedArchiver")
 	}
+
 	if _, ok := nsKeyedArchiverData["$top"]; !ok {
 		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$top")
 	}
