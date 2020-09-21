@@ -31,10 +31,10 @@ func main() {
 
 	plistData, err := nskeyedarchiver.Unarchive(fileData)
 	if err != nil {
-        fmt.Println("Error decoding plist:", err)
-        return
-    }
-    
+		fmt.Println("Error decoding plist:", err)
+		return
+	}
+	
 	for key, value := range plistData[0].(map[string]interface{}) {
 		fmt.Printf("%s = %v (%T)\n", key, value, value)
 	}
