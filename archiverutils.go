@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
+	"time"
 
 	plist "howett.net/plist"
 )
@@ -48,6 +51,28 @@ func printAsJSON(obj interface{}) {
 		log.Fatalf("Error while marshalling Json:%s", err)
 	}
 	fmt.Print(string(b))
+}
+
+// nsDateToTime takes an Apple Cocoa Core Data timestamp and returns a golang time
+// https://www.epochconverter.com/coredata
+func nsDateToTime(timestamp float64) (time.Time, error) {
+	floatParts := strings.Split(fmt.Sprintf("%.3f", timestamp), ".")
+
+	// Timestamp
+	timeint, err := strconv.ParseInt(floatParts[0], 10, 64)
+	if err != nil {
+		return time.Now(), err
+	}
+	seconds := int64(timeint + 978310800)
+
+	// Timestamp nanoseconds
+	timenano, err := strconv.ParseInt(floatParts[1], 10, 64)
+	if err != nil {
+		return time.Now(), err
+	}
+	nanoseconds := timenano
+
+	return time.Unix(seconds, nanoseconds), nil
 }
 
 //verifyCorrectArchiver makes sure the nsKeyedArchived plist has all the right keys and values and returns an error otherwise

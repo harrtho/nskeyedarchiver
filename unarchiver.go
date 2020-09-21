@@ -54,6 +54,15 @@ func extractObjects(objectRefs []plist.UID, objects []interface{}) ([]interface{
 		}
 
 		objectInterface := objectRef.(map[string]interface{})
+		if ok := isTimeObject(objectInterface, objects); ok {
+			timestamp, err := nsDateToTime(objectInterface["NS.time"].(float64))
+			if err != nil {
+				return nil, err
+			}
+			returnValue[i] = timestamp
+			continue
+		}
+
 		if object, ok := isArrayObject(objectInterface, objects); ok {
 			extractObjects, err := extractObjects(toUIDList(object["NS.objects"].([]interface{})), objects)
 			if err != nil {
@@ -98,6 +107,17 @@ func isDictionaryObject(object map[string]interface{}, objects []interface{}) bo
 		return false
 	}
 	if className == "NSDictionary" || className == "NSMutableArray" || className == "NSMutableDictionary" {
+		return true
+	}
+	return false
+}
+
+func isTimeObject(object map[string]interface{}, objects []interface{}) bool {
+	className, err := resolveClass(object["$class"], objects)
+	if err != nil {
+		return false
+	}
+	if className == "NSDate" {
 		return true
 	}
 	return false
