@@ -117,6 +117,14 @@ func isDictionaryObject(object map[string]interface{}, objects []interface{}) bo
 	return false
 }
 
+// Support for NS.time
+// 23 => {
+// 	"$classes" => [
+// 	  0 => "NSDate"
+// 	  1 => "NSObject"
+// 	]
+// 	"$classname" => "NSDate"
+// }
 func isTimeObject(object map[string]interface{}, objects []interface{}) bool {
 	className, err := resolveClass(object["$class"], objects)
 	if err != nil {
