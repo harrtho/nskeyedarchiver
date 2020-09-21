@@ -2,8 +2,8 @@ package nskeyedarchiver
 
 import (
 	"fmt"
-	"reflect"
 
+	"github.com/rs/zerolog/log"
 	plist "howett.net/plist"
 )
 
@@ -22,7 +22,7 @@ func Unarchive(xml []byte) ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return extractObjectsFromTop(nsKeyedArchiverData[topKey].(map[string]interface{}), nsKeyedArchiverData[objectsKey].([]interface{}))
+	return extractObjectsFromTop(nsKeyedArchiverData["$top"].(map[string]interface{}), nsKeyedArchiverData["$objects"].([]interface{}))
 
 }
 
@@ -43,15 +43,19 @@ func extractObjectsFromTop(top map[string]interface{}, objects []interface{}) ([
 func extractObjects(objectRefs []plist.UID, objects []interface{}) ([]interface{}, error) {
 	objectCount := len(objectRefs)
 	returnValue := make([]interface{}, objectCount)
+	log.Debug().Msgf("Extracting %d objects from list of %d total objects\n", objectCount, len(objects))
 	for i := 0; i < objectCount; i++ {
 		objectIndex := objectRefs[i]
 		objectRef := objects[objectIndex]
+
 		if object, ok := isPrimitiveObject(objectRef); ok {
 			returnValue[i] = object
 			continue
 		}
-		if object, ok := isArrayObject(objectRef.(map[string]interface{}), objects); ok {
-			extractObjects, err := extractObjects(toUidList(object[nsObjects].([]interface{})), objects)
+
+		objectInterface := objectRef.(map[string]interface{})
+		if object, ok := isArrayObject(objectInterface, objects); ok {
+			extractObjects, err := extractObjects(toUIDList(object["NS.objects"].([]interface{})), objects)
 			if err != nil {
 				return nil, err
 			}
@@ -59,8 +63,8 @@ func extractObjects(objectRefs []plist.UID, objects []interface{}) ([]interface{
 			continue
 		}
 
-		if object, ok := isDictionaryObject(objectRef.(map[string]interface{}), objects); ok {
-			dictionary, err := extractDictionary(object, objects)
+		if ok := isDictionaryObject(objectInterface, objects); ok {
+			dictionary, err := extractDictionary(objectInterface, objects)
 			if err != nil {
 				return nil, err
 			}
@@ -68,43 +72,45 @@ func extractObjects(objectRefs []plist.UID, objects []interface{}) ([]interface{
 			continue
 		}
 
-		objectType := reflect.TypeOf(objectRef).String()
-		return nil, fmt.Errorf("Unknown object type:%s", objectType)
-
+		customObject, err := extractCustomObject(objectInterface, objects)
+		if err != nil {
+			return nil, err
+		}
+		returnValue[i] = customObject
 	}
 	return returnValue, nil
 }
 
 func isArrayObject(object map[string]interface{}, objects []interface{}) (map[string]interface{}, bool) {
-	className, err := resolveClass(object[class], objects)
+	className, err := resolveClass(object["$class"], objects)
 	if err != nil {
 		return nil, false
 	}
-	if className == nsArray || className == nsMutableArray || className == nsSet || className == nsMutableSet {
+	if className == "NSArray" || className == "NSMutableArray" || className == "NSSet" || className == "NSMutableSet" {
 		return object, true
 	}
 	return object, false
 }
 
-func isDictionaryObject(object map[string]interface{}, objects []interface{}) (map[string]interface{}, bool) {
-	className, err := resolveClass(object[class], objects)
+func isDictionaryObject(object map[string]interface{}, objects []interface{}) bool {
+	className, err := resolveClass(object["$class"], objects)
 	if err != nil {
-		return nil, false
+		return false
 	}
-	if className == nsDictionary || className == nsMutableDictionary {
-		return object, true
+	if className == "NSDictionary" || className == "NSMutableArray" || className == "NSMutableDictionary" {
+		return true
 	}
-	return object, false
+	return false
 }
 
 func extractDictionary(object map[string]interface{}, objects []interface{}) (map[string]interface{}, error) {
-	keyRefs := toUidList(object[nsKeys].([]interface{}))
+	keyRefs := toUIDList(object["NS.keys"].([]interface{}))
 	keys, err := extractObjects(keyRefs, objects)
 	if err != nil {
 		return nil, err
 	}
 
-	valueRefs := toUidList(object[nsObjects].([]interface{}))
+	valueRefs := toUIDList(object["NS.objects"].([]interface{}))
 	values, err := extractObjects(valueRefs, objects)
 	if err != nil {
 		return nil, err
@@ -118,10 +124,55 @@ func extractDictionary(object map[string]interface{}, objects []interface{}) (ma
 	return result, nil
 }
 
+// Custom Object, where the keys are the map indexes, i.e.
+// "$class" => <CFKeyedArchiverUID 0x7f8383e07f60 [0x7fff8912ccc0]>{value = 56}
+// "albumGUID" => <CFKeyedArchiverUID 0x7f8383e07ea0 [0x7fff8912ccc0]>{value = 4}
+// "assets" => <CFKeyedArchiverUID 0x7f8383e07e40 [0x7fff8912ccc0]>{value = 5}
+// "ctag" => <CFKeyedArchiverUID 0x7f8383e07ec0 [0x7fff8912ccc0]>{value = 3}
+// "email" => <CFKeyedArchiverUID 0x7f8383e07fc0 [0x7fff8912ccc0]>{value = 48}
+func extractCustomObject(object map[string]interface{}, objects []interface{}) (map[string]interface{}, error) {
+
+	// Extract keys from their initial place, build array of UIDs to extract
+	objectPrimitives := make(map[string]interface{}, len(object))
+	var objectValueList []interface{}
+	var objectKeyList []string
+	for key, value := range object {
+		if key == "$class" || key == "$classes" {
+			log.Debug().Msgf("Ignoring class definition %v\n", key)
+		} else if _, ok := isPrimitiveObject(value); ok {
+			log.Debug().Msgf("Adding primitive directly %v:%v\n", key, value)
+			objectPrimitives[key] = value
+		} else {
+			objectValueList = append(objectValueList, value)
+			objectKeyList = append(objectKeyList, key)
+		}
+	}
+
+	valueRefs := toUIDList(objectValueList)
+	values, err := extractObjects(valueRefs, objects)
+	if err != nil {
+		return nil, err
+	}
+	mapSize := len(values)
+	result := make(map[string]interface{}, len(objectPrimitives)+mapSize)
+
+	// Add primitives
+	for key, value := range objectPrimitives {
+		result[key] = value
+	}
+
+	// Add values extracted from UIDs
+	for i := 0; i < mapSize; i++ {
+		result[objectKeyList[i]] = values[i]
+	}
+
+	return result, nil
+}
+
 func resolveClass(classInfo interface{}, objects []interface{}) (string, error) {
 	if v, ok := classInfo.(plist.UID); ok {
 		classDict := objects[v].(map[string]interface{})
-		return classDict[className].(string), nil
+		return classDict["$classname"].(string), nil
 	}
 	return "", fmt.Errorf("Could not find class for %s", classInfo)
 }

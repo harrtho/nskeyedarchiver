@@ -9,8 +9,8 @@ import (
 	plist "howett.net/plist"
 )
 
-//toUidList type asserts a []interface{} to a []plist.UID by iterating through the list.
-func toUidList(list []interface{}) []plist.UID {
+//toUIDList type asserts a []interface{} to a []plist.UID by iterating through the list.
+func toUIDList(list []interface{}) []plist.UID {
 	l := len(list)
 	result := make([]plist.UID, l)
 	for i := 0; i < l; i++ {
@@ -52,27 +52,25 @@ func printAsJSON(obj interface{}) {
 
 //verifyCorrectArchiver makes sure the nsKeyedArchived plist has all the right keys and values and returns an error otherwise
 func verifyCorrectArchiver(nsKeyedArchiverData map[string]interface{}) error {
-	if val, ok := nsKeyedArchiverData[archiverKey]; !ok {
-		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", archiverKey)
+	if val, ok := nsKeyedArchiverData["$archiver"]; !ok {
+		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$archiver")
 	} else {
-		if stringValue := val.(string); stringValue != nsKeyedArchiver {
-			return fmt.Errorf("Invalid value: %s for key '%s', expected: '%s'", stringValue, archiverKey, nsKeyedArchiver)
+		if stringValue := val.(string); stringValue != "NSKeyedArchiver" {
+			return fmt.Errorf("Invalid value: %s for key '%s', expected: '%s'", stringValue, "$archiver", "NSKeyedArchiver")
 		}
 	}
-	if _, ok := nsKeyedArchiverData[topKey]; !ok {
-		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", topKey)
+	if _, ok := nsKeyedArchiverData["$top"]; !ok {
+		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$top")
 	}
 
-	if _, ok := nsKeyedArchiverData[objectsKey]; !ok {
-		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", objectsKey)
+	if _, ok := nsKeyedArchiverData["$objects"]; !ok {
+		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$objects")
 	}
 
-	if val, ok := nsKeyedArchiverData[versionKey]; !ok {
-		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", versionKey)
-	} else {
-		if stringValue := val.(uint64); stringValue != versionValue {
-			return fmt.Errorf("Invalid value: %d for key '%s', expected: '%d'", stringValue, versionKey, versionValue)
-		}
+	if val, ok := nsKeyedArchiverData["$version"]; !ok {
+		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$version")
+	} else if stringValue := val.(uint64); stringValue != 100000 {
+		return fmt.Errorf("Invalid value: %d for key '%s', expected: '%d'", stringValue, "$version", 100000)
 	}
 
 	return nil
