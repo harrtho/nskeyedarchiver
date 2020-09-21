@@ -1,5 +1,6 @@
 # nskeyedarchiver
-A Golang based implementation of Swift/ObjectiveCs NSKeyedArchiver/NSKeyedUnarchiver
+
+A fork extending [@danielpaulus's excellent Golang based implementation](https://github.com/danielpaulus/nskeyedarchiver) NSKeyedArchiver with support for extracting Time, String, and custom objects.
 
 Unarchive extracts NSKeyedArchiver Plists, either in XML or Binary format, and returns an array of the archived objects converted to usable Go Types.
 - Primitives will be extracted just like regular Plist primitives (string, float64, int64, []uint8 etc.).
@@ -9,6 +10,36 @@ Unarchive extracts NSKeyedArchiver Plists, either in XML or Binary format, and r
 Todos: 
 - Add custom object support (anything that is not an array, set or dictionary)
 - Add archiving/encoding support
+
+Unarchive example:
+```golang
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+
+	"github.com/qcasey/nskeyedarchiver"
+)
+
+func main() {
+	fileData, err := ioutil.ReadFile("apple-nskeyedariver.plist")
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return
+	}
+
+	plistData, err := nskeyedarchiver.Unarchive(fileData)
+	if err != nil {
+        fmt.Println("Error decoding plist:", err)
+        return
+    }
+    
+	for key, value := range plistData[0].(map[string]interface{}) {
+		fmt.Printf("%s = %v (%T)\n", key, value, value)
+	}
+}
+```
 
 
 Thanks howett.net/plist for your awesome Plist library :-) 
