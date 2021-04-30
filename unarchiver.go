@@ -3,7 +3,7 @@ package nskeyedarchiver
 import (
 	"fmt"
 
-	plist "howett.net/plist"
+	plist "github.com/xDevThomas/go-plist"
 )
 
 //Unarchive extracts NSKeyedArchiver Plists, either in XML or Binary format, and returns an array of the archived objects converted to usable Go Types.
