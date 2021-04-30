@@ -1,4 +1,4 @@
-module github.com/danielpaulus/nskeyedarchiver
+module github.com/XDevThomas/nskeyedarchiver
 
 go 1.13
 
