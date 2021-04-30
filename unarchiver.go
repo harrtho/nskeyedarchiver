@@ -6,7 +6,7 @@ import (
 	plist "github.com/xDevThomas/go-plist"
 )
 
-//Unarchive extracts NSKeyedArchiver Plists, either in XML or Binary format, and returns an array of the archived objects converted to usable Go Types.
+// Unarchive extracts NSKeyedArchiver Plist`s, either in XML or Binary format, and returns an array of the archived objects converted to usable Go Types.
 // Primitives will be extracted just like regular Plist primitives (string, float64, int64, []uint8 etc.).
 // NSArray, NSMutableArray, NSSet and NSMutableSet will transformed into []interface{}
 // NSDictionary and NSMutableDictionary will be transformed into map[string] interface{}. I might add non string keys later.
@@ -31,7 +31,7 @@ func extractObjectsFromTop(top map[string]interface{}, objects []interface{}) ([
 		return extractObjects([]plist.UID{root.(plist.UID)}, objects)
 	}
 	objectRefs := make([]plist.UID, objectCount)
-	//convert the Dictionary with the objectReferences into a flat list of UIDs, so we can reuse the extractObjects function later
+	//convert the Dictionary with the objectReferences into a flat list of UID`s, so we can reuse the extractObjects function later
 	for i := 0; i < objectCount; i++ {
 		objectIndex := top[fmt.Sprintf("$%d", i)].(plist.UID)
 		objectRefs[i] = objectIndex
@@ -183,7 +183,7 @@ func extractDictionary(object map[string]interface{}, objects []interface{}) (ma
 // "email" => <CFKeyedArchiverUID 0x7f8383e07fc0 [0x7fff8912ccc0]>{value = 48}
 func extractCustomObject(object map[string]interface{}, objects []interface{}) (map[string]interface{}, error) {
 
-	// Extract keys from their initial place, build array of UIDs to extract
+	// Extract keys from their initial place, build array of UID`s to extract
 	objectPrimitives := make(map[string]interface{}, len(object))
 	var objectValueList []interface{}
 	var objectKeyList []string
@@ -213,7 +213,7 @@ func extractCustomObject(object map[string]interface{}, objects []interface{}) (
 		result[key] = value
 	}
 
-	// Add values extracted from UIDs
+	// Add values extracted from UID`s
 	for i := 0; i < mapSize; i++ {
 		result[objectKeyList[i]] = values[i]
 	}
@@ -226,7 +226,7 @@ func resolveClass(classInfo interface{}, objects []interface{}) (string, error) 
 		classDict := objects[v].(map[string]interface{})
 		return classDict["$classname"].(string), nil
 	}
-	return "", fmt.Errorf("Could not find class for %s", classInfo)
+	return "", fmt.Errorf("could not find class for %s", classInfo)
 }
 
 func isPrimitiveObject(object interface{}) (interface{}, bool) {

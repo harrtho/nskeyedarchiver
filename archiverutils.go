@@ -12,7 +12,7 @@ import (
 	plist "github.com/xDevThomas/go-plist"
 )
 
-//toUIDList type asserts a []interface{} to a []plist.UID by iterating through the list.
+// toUIDList type asserts a []interface{} to a []plist.UID by iterating through the list.
 func toUIDList(list []interface{}) []plist.UID {
 	l := len(list)
 	result := make([]plist.UID, l)
@@ -22,7 +22,7 @@ func toUIDList(list []interface{}) []plist.UID {
 	return result
 }
 
-//plistFromBytes decodes a binary or XML based PLIST using the amazing github.com/DHowett/go-plist library and returns an interface{} or propagates the error raised by the library.
+// plistFromBytes decodes a binary or XML based PLIST and returns an interface{} or propagates the error raised by the library.
 func plistFromBytes(plistBytes []byte) (interface{}, error) {
 	var test interface{}
 	decoder := plist.NewDecoder(bytes.NewReader(plistBytes))
@@ -34,9 +34,7 @@ func plistFromBytes(plistBytes []byte) (interface{}, error) {
 	return test, nil
 }
 
-//ToPlist converts a given struct to a Plist using the
-//github.com/DHowett/go-plist library. Make sure your struct is exported.
-//It returns a string containing the plist.
+// ToPlist returns a string containing the plist.
 func ToPlist(data interface{}) string {
 	buf := &bytes.Buffer{}
 	encoder := plist.NewEncoder(buf)
@@ -44,7 +42,7 @@ func ToPlist(data interface{}) string {
 	return buf.String()
 }
 
-//Print an object as JSON for debugging purposes, careful log.Fatals on error
+// Print an object as JSON for debugging purposes, careful log.Fatal on error
 func printAsJSON(obj interface{}) {
 	b, err := json.MarshalIndent(obj, "", "  ")
 	if err != nil {
@@ -75,26 +73,26 @@ func NSDateToTime(timestamp float64) (time.Time, error) {
 	return time.Unix(seconds, nanoseconds), nil
 }
 
-//verifyCorrectArchiver makes sure the nsKeyedArchived plist has all the right keys and values and returns an error otherwise
+// verifyCorrectArchiver makes sure the nsKeyedArchived plist has all the right keys and values and returns an error otherwise
 func verifyCorrectArchiver(nsKeyedArchiverData map[string]interface{}) error {
 	if val, ok := nsKeyedArchiverData["$archiver"]; !ok {
-		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$archiver")
+		return fmt.Errorf("invalid NSKeyedArchiverObject, missing key '%s'", "$archiver")
 	} else if stringValue := val.(string); stringValue != "NSKeyedArchiver" {
-		return fmt.Errorf("Invalid value: %s for key '%s', expected: '%s'", stringValue, "$archiver", "NSKeyedArchiver")
+		return fmt.Errorf("invalid value: %s for key '%s', expected: '%s'", stringValue, "$archiver", "NSKeyedArchiver")
 	}
 
 	if _, ok := nsKeyedArchiverData["$top"]; !ok {
-		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$top")
+		return fmt.Errorf("invalid NSKeyedArchiverObject, missing key '%s'", "$top")
 	}
 
 	if _, ok := nsKeyedArchiverData["$objects"]; !ok {
-		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$objects")
+		return fmt.Errorf("invalid NSKeyedArchiverObject, missing key '%s'", "$objects")
 	}
 
 	if val, ok := nsKeyedArchiverData["$version"]; !ok {
-		return fmt.Errorf("Invalid NSKeyedAchiverObject, missing key '%s'", "$version")
+		return fmt.Errorf("invalid NSKeyedArchiverObject, missing key '%s'", "$version")
 	} else if stringValue := val.(uint64); stringValue != 100000 {
-		return fmt.Errorf("Invalid value: %d for key '%s', expected: '%d'", stringValue, "$version", 100000)
+		return fmt.Errorf("invalid value: %d for key '%s', expected: '%d'", stringValue, "$version", 100000)
 	}
 
 	return nil

@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-//TestDecoderJson tests if real DTX nsKeyedArchived plists can be decoded without error
+// TestDecoderJson tests if real DTX nsKeyedArchiver plist can be decoded without error
 // func TestDecoderJson(t *testing.T) {
 // 	dat, err := ioutil.ReadFile("fixtures/payload_dump.json")
 // 	if err != nil {
