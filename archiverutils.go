@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	plist "github.com/xDevThomas/go-plist"
+	plist "github.com/harrtho/go-plist"
 )
 
 // toUIDList type asserts a []interface{} to a []plist.UID by iterating through the list.

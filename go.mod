@@ -1,5 +1,5 @@
-module github.com/XDevThomas/nskeyedarchiver
+module github.com/harrtho/nskeyedarchiver
 
 go 1.13
 
-require github.com/xDevThomas/go-plist v0.0.0-20210430123807-0bfa698286de
+require github.com/harrtho/go-plist v0.0.0-20230412133858-c48f1cd0c107
